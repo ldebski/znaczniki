@@ -26,21 +26,26 @@ public class BrzuchScript : MonoBehaviour
         znacznik.transform.eulerAngles = new Vector3(1.0f, 1.0f, 0.0f);
     }
 
+    public bool nextBrzuch()
+    {
+        if (currMat == matsLen)
+        {
+            UnityEngine.Debug.Log("Ostatnie zdjecie");
+            return true;
+        }
+        else
+        {
+            brzuchObject.GetComponent<Renderer>().material = (Material)Mats[currMat++];
+        }
+        return false;
+    }
+
     // Update is called once per frame
     void Update()
     {
         if (Input.GetKeyDown("space"))
         {
-            // UnityEngine.Debug.Log(matsLen);
             resetZnacznik();
-            if (currMat == matsLen)
-            {
-                UnityEngine.Debug.Log("Ostatnie zdjecie");
-            }
-            else
-            {
-                brzuchObject.GetComponent<Renderer>().material = (Material)Mats[currMat++];
-            }
         }
     }
 }

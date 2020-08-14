@@ -417,6 +417,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   resWidth: 1450
   resHeight: 1450
+  randomPerPhoto: 2
 --- !u!1 &1830043758
 GameObject:
   m_ObjectHideFlags: 0
