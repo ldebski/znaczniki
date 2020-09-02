@@ -57,10 +57,11 @@ public class HiResScreenShots : MonoBehaviour
 
     public static string ScreenShotName(int width, int height, int i = 0)
     {
-        return string.Format("{0}/screenshots/screen_{1}x{2}_{3}_{4}.png",
+        return string.Format("{0}/screenshots/screen_{1}x{2}_{3}_{4}_{5}.png",
                              Application.dataPath,
                              width, height,
                              System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss"),
+                             GameObject.Find("Brzuch").GetComponent<Renderer>().material,
                              i);
     }
 
@@ -80,13 +81,13 @@ public class HiResScreenShots : MonoBehaviour
     static string getZnacznikPosition(string matName, string screenName)
     {
         GameObject znacznik = GameObject.Find("Znacznik");
-        return string.Format("{0},{1},{2},{3},{5},{4}",
+        return string.Format("{0},{1},{2},{3},{4},{5}",
                             matName,
-                            znacznik.transform.position,
+                            znacznik.transform.position.ToString("F3"),
                             znacznik.transform.eulerAngles,
-                            znacznik.transform.localScale,
-                            screenName,
-                            calculatePoints()
+                            znacznik.transform.localScale.ToString("F3"),
+                            calculatePoints(),
+                            screenName
                             );
     }
 
@@ -100,9 +101,18 @@ public class HiResScreenShots : MonoBehaviour
         var width = scale[0];
         var height = scale[1];
 
-        // TO DO zwroc wspolrzedne wierzcholkow jako string czy co chcecie zapisac wraz z obrazem
+        var mf = znacznik.GetComponent<MeshFilter>().mesh;
 
-        return "";
+        var lewy_gorny = (znacznik.transform.TransformPoint(mf.vertices[3]).x.ToString("F3"),
+                          znacznik.transform.TransformPoint(mf.vertices[3]).y.ToString("F3"));
+        var prawy_gorny = (znacznik.transform.TransformPoint(mf.vertices[2]).x.ToString("F3"),
+                  znacznik.transform.TransformPoint(mf.vertices[2]).y.ToString("F3"));
+        var prawy_dolny = (znacznik.transform.TransformPoint(mf.vertices[0]).x.ToString("F3"),
+                  znacznik.transform.TransformPoint(mf.vertices[0]).y.ToString("F3"));
+        var lewy_dolny = (znacznik.transform.TransformPoint(mf.vertices[1]).x.ToString("F3"),
+                  znacznik.transform.TransformPoint(mf.vertices[1]).y.ToString("F3"));
+
+        return string.Format("{0},{1},{2},{3}", lewy_gorny, prawy_gorny, prawy_dolny, lewy_dolny);
     }
 
     string matName;
@@ -171,10 +181,11 @@ public class HiResScreenShots : MonoBehaviour
     void LateUpdate()
     {
         if (Input.GetKeyDown("x"))
-            calculatePoints();
+            UnityEngine.Debug.Log(calculatePoints());
+
 
         if (Input.GetKeyDown("p"))
-            TakeRandomScreenshots();
+        TakeRandomScreenshots();
 
         takeHiResShot |= Input.GetKeyDown("k");
         if (takeHiResShot)
