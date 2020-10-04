@@ -1,1 +1,1 @@
-photoId,znacznikPos,znacznikRot,znacznikScale1,LeftTop,RightTop,RightLow,LeftLow,photoFullPath1
+photoId|znacznikPos|znacznikRot|znacznikScale1|LeftTop|RightTop|RightLow|LeftLow|photoFullPath1

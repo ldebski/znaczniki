@@ -35,7 +35,9 @@ public class HiResScreenShots : MonoBehaviour
         znacznik.transform.eulerAngles = new Vector3(x_angle, y_angle, 0);
 
         var scale = (float)rand.NextDouble() / 4 + 0.5f;
-        znacznik.transform.localScale = new Vector3(scale, scale, 0);
+        znacznik.transform.localScale = new Vector3(scale, scale, 0);       
+        znacznik.transform.Rotate((float)rand.NextDouble() * 90.0f, (float)rand.NextDouble() * 90.0f, (float)rand.NextDouble() * 90.0f, Space.World);
+
     }
 
     public void TakeRandomScreenshots()
@@ -81,7 +83,7 @@ public class HiResScreenShots : MonoBehaviour
     static string getZnacznikPosition(string matName, string screenName)
     {
         GameObject znacznik = GameObject.Find("Znacznik");
-        return string.Format("{0},{1},{2},{3},{4},{5}",
+        return string.Format("{0}|{1}|{2}|{3}|{4}|{5}",
                             matName,
                             znacznik.transform.position.ToString("F3"),
                             znacznik.transform.eulerAngles,
@@ -112,7 +114,7 @@ public class HiResScreenShots : MonoBehaviour
         var lewy_dolny = (znacznik.transform.TransformPoint(mf.vertices[1]).x.ToString("F3"),
                   znacznik.transform.TransformPoint(mf.vertices[1]).y.ToString("F3"));
 
-        return string.Format("{0},{1},{2},{3}", lewy_gorny, prawy_gorny, prawy_dolny, lewy_dolny);
+        return string.Format("{0}|{1}|{2}|{3}", lewy_gorny, prawy_gorny, prawy_dolny, lewy_dolny);
     }
 
     string matName;
