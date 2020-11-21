@@ -39,6 +39,7 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.aruco.Board;
 import org.opencv.aruco.CharucoBoard;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
@@ -57,6 +58,7 @@ import java.util.List;
 
 import static org.opencv.aruco.Aruco.DICT_4X4_250;
 import static org.opencv.aruco.Aruco.detectMarkers;
+import static org.opencv.aruco.Aruco.estimatePoseBoard;
 import static org.opencv.aruco.Aruco.getPredefinedDictionary;
 import static org.opencv.calib3d.Calib3d.drawFrameAxes;
 import static org.opencv.imgcodecs.Imgcodecs.imwrite;
@@ -217,7 +219,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         Utils.bitmapToMat(bitmap, displayCopy);
                         cvtColor(mat, mat, Imgproc.COLOR_BGRA2GRAY);
 
-                        Dictionary dictionary = Aruco.getPredefinedDictionary(Aruco.DICT_4X4_250);
+                        Dictionary dictionary = getPredefinedDictionary(DICT_4X4_250);
                         List<Mat> corners = new LinkedList<>();
                         Mat ids = new Mat();
                         DetectorParameters parameters = DetectorParameters.create();
@@ -226,35 +228,85 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         //detecting
                         if (!mat.empty()) {
                             long startTime = System.currentTimeMillis();
-                            Aruco.detectMarkers(mat, dictionary, corners, ids, parameters);
+                            detectMarkers(mat, dictionary, corners, ids, parameters);
                             long estimatedTime = System.currentTimeMillis() - startTime;
                             //Log.e("time milliseconds", estimatedTime + "");
                             if (!ids.empty()) {
-                                Aruco.drawDetectedMarkers(mat, corners, ids, new Scalar(64, 64, 64));
-                                if(corners.size() == 4) {
-                                    int x1 = (int)corners.get(0).get(0,2)[0];
-                                    int y1 = (int)corners.get(0).get(0,2)[1];
 
-                                    int x2 = (int)corners.get(1).get(0,2)[0];
-                                    int y2 = (int)corners.get(1).get(0,2)[1];
 
-                                    int x3 = (int)corners.get(2).get(0,2)[0];
-                                    int y3 = (int)corners.get(2).get(0,2)[1];
-
-                                    int x4 = (int)corners.get(3).get(0,2)[0];
-                                    int y4 = (int)corners.get(3).get(0,2)[1];
-
-                                    Point point1 = new Point(x1, y1);
-                                    Point point2 = new Point(x2, y2);
-                                    Point point3 = new Point(x3, y3);
-                                    Point point4 = new Point(x4, y4);
-
-                                    Imgproc.line(displayCopy, point1, point2, new Scalar(64, 64, 64), 10);
-                                    Imgproc.line(displayCopy, point2, point3, new Scalar(64, 64, 64), 10);
-                                    Imgproc.line(displayCopy, point3, point4, new Scalar(64, 64, 64), 10);
-                                    Imgproc.line(displayCopy, point4, point1, new Scalar(64, 64, 64), 10);
-                                    Log.e("time milliseconds", "narysowano");
+                                // rysuje koło jak wykryje 2 przekątne
+                                MarkersUtils marker = new MarkersUtils(corners, ids);
+                                if (marker.validate()){
+                                    Point circleMiddle = marker.getCircleMiddle();
+                                    double radius = marker.getRadius();
+                                    Imgproc.circle(displayCopy, circleMiddle, (int)radius, new Scalar(255,0,0), 15);
                                 }
+
+                                // printuje losowy szerokość i wysokość losowego markera
+                                if (corners.size() > 0){
+                                    Marker marker2 = new Marker(corners.get(0), (int)ids.get(0,0)[0]);
+                                    Log.e("cos", "Width: " + Double.toString(marker2.getWidth()) + "    Height: " + Double.toString(marker2.getHeight()));
+                                }
+
+                                    // próba kalibracji kamery trochę nieudana
+                                    // Aruco.drawDetectedMarkers(mat, corners, ids);
+                                    // Mat cameraMatrix = new Mat(3, 3, CvType.CV_32F);
+                                    // int row = 0, col = 0;
+                                    // double[] data = {787.63900583,0.,429.67064117,0,889.76749376,358.5179725,0,0.,1.};
+                                    // cameraMatrix.put(row,col,data);
+//
+                                    // Mat distort = new Mat(5,1,CvType.CV_32F);
+                                    // row = 0;
+                                    // col = 0;
+                                    // double[] distort_data = {-2.75985569e+02, -1.76709465e+03, -1.69429584e+01, -1.10112096e+01,3.93484948e+04};
+                                    // distort.put(row,col,distort_data);
+                                    // Mat rvecs = new Mat(), tvecs = new Mat();
+                                    // Aruco.estimatePoseSingleMarkers(corners, 0.03f, cameraMatrix, distort, rvecs, tvecs);
+                                    // drawFrameAxes(displayCopy, cameraMatrix, distort, rvecs, tvecs, 0.05f);
+                                    // for (int i=0;i<rvecs.size().height;i++){
+                                    //     double[] rvec = rvecs.get(i, 0);
+                                    //     double[] tvec = tvecs.get(i,0);
+                                    //     Mat rvec_mat = new Mat(3,1, CvType.CV_32F);
+                                    //     row = 0;col = 0;
+                                    //     rvec_mat.put(row,col,rvec);
+                                    //     Mat tvec_mat = new Mat(3,1, CvType.CV_32F);
+                                    //     row = 0;col = 0;
+                                    //     tvec_mat.put(row,col,tvec);
+                                    //     drawFrameAxes(displayCopy, cameraMatrix, distort, rvec_mat, tvec_mat, 0.1f);
+                                    // }
+                                    // if(corners.size() >= 1){
+                                    //     Log.e("corners size: ", Double.toString(corners.size()));
+                                    //     for(int i=0;i<corners.size();i++){
+                                    //         Log.e("xzcczx", Double.toString(ids.get(i,0)[0]) + ": " + corners.get(i).dump());
+                                    //         int xd = (int)corners.get(0).get(0,2)
+                                    //         // Log.e("xzcczx", corners.get(i).dump());
+                                    //     }
+                                    // }
+
+                                // printuje linie pomiędzy 4 cornerami jak je znajdzie
+                                // if(corners.size() == 4) {
+                                //     int x1 = (int)corners.get(0).get(0,2)[0];
+                                //     int y1 = (int)corners.get(0).get(0,2)[1];
+//
+                                //     int x2 = (int)corners.get(1).get(0,2)[0];
+                                //     int y2 = (int)corners.get(1).get(0,2)[1];
+//
+                                //     int x3 = (int)corners.get(2).get(0,2)[0];
+                                //     int y3 = (int)corners.get(2).get(0,2)[1];
+//
+                                //     int x4 = (int)corners.get(3).get(0,2)[0];
+                                //     int y4 = (int)corners.get(3).get(0,2)[1];
+//
+                                //     Point point1 = new Point(x1, y1);
+                                //     Point point2 = new Point(x2, y2);
+                                //     Point point3 = new Point(x3, y3);
+                                //     Point point4 = new Point(x4, y4);
+                                //     Imgproc.line(displayCopy, point1, point2, new Scalar(64, 64, 64), 10);
+                                //     Imgproc.line(displayCopy, point2, point3, new Scalar(64, 64, 64), 10);
+                                //     Imgproc.line(displayCopy, point3, point4, new Scalar(64, 64, 64), 10);
+                                //     Imgproc.line(displayCopy, point4, point1, new Scalar(64, 64, 64), 10);
+                                //     Log.e("time milliseconds", "narysowano");
+                                // }
                             }
 
                         }
