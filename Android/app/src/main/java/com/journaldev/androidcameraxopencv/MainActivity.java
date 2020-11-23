@@ -233,97 +233,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             //Log.e("time milliseconds", estimatedTime + "");
                             if (!ids.empty()) {
 
+                                // klasa przechowująca wszystkie markery
+                                Markers markers = new Markers(corners, ids);
 
-                                // rysuje koło jak wykryje 2 przekątne
-                                MarkersUtils marker = new MarkersUtils(corners, ids);
-                                if (marker.validate()){
-                                    Point circleMiddle = marker.getCircleMiddle();
-                                    double radius = marker.getRadius();
-                                    Imgproc.circle(displayCopy, circleMiddle, (int)radius, new Scalar(255,0,0), 15);
-                                }
+                                // klasa obsługująca wyświetlany tekst pomocny np. "lewo", "prawo"
+                                AngleHelper angleHelper = new AngleHelper(markers);
+                                // wypisuje na środku zdjęcia "PERFECT" jak jest dobre ujęcie
+                                angleHelper.DrawAngleHelper(displayCopy);
 
-                                // printuje losowy szerokość i wysokość losowego markera
-                                if (corners.size() > 0){
-                                    Marker marker2 = new Marker(corners.get(0), (int)ids.get(0,0)[0]);
-                                    Log.e("cos", "Width: " + Double.toString(marker2.getWidth()) + "    Height: " + Double.toString(marker2.getHeight()));
-                                }
+                                // klasa pomocna do printowania rozmiarow itp
+                                DebugUtils utils = new DebugUtils(markers);
 
-                                    // próba kalibracji kamery trochę nieudana
-                                     //Aruco.drawDetectedMarkers(mat, corners, ids);
-                                     Mat cameraMatrix = new Mat(3, 3, CvType.CV_32F);
-                                     int row = 0, col = 0;
-                                     double[] data = {1624.2491,0.,959.3577,0.,1614.9941,480.5490,0.,0.,1.};
-                                     cameraMatrix.put(row,col,data);
-//
-                                     Mat distort = new Mat(5,1,CvType.CV_32F);
-                                     row = 0;
-                                     col = 0;
-                                     double[] distort_data = {0.0353, 0.8180, 0.00, 0.00,-4.6780};
-                                     distort.put(row,col,distort_data);
-                                     Mat rvecs = new Mat(), tvecs = new Mat();
-                                     Aruco.estimatePoseSingleMarkers(corners, 0.03f, cameraMatrix, distort, rvecs, tvecs);
-                                     if(ids.height()>1){
-                                            for (int i=0;i<rvecs.height();i++) {
-                                                double[] rvec = rvecs.get(i, 0);
-                                                double[] tvec = tvecs.get(i, 0);
-                                                Mat rvec_mat = new Mat(3, 1, CvType.CV_32F);
-                                                row = 0;
-                                                col = 0;
-                                                rvec_mat.put(row, col, rvec);
-                                                Mat tvec_mat = new Mat(3, 1, CvType.CV_32F);
-                                                row = 0;
-                                                col = 0;
-                                                tvec_mat.put(row, col, tvec);
-                                                drawFrameAxes(displayCopy, cameraMatrix, distort, rvec_mat, tvec_mat, 0.1f);
-                                            }
-                                     }
-                                     else if(ids.height()==1) {
-                                         drawFrameAxes(displayCopy, cameraMatrix, distort, rvecs, tvecs, 0.04f, 10);
-                                     }
-                                    // for (int i=0;i<rvecs.size().height;i++){
-                                    //     double[] rvec = rvecs.get(i, 0);
-                                    //     double[] tvec = tvecs.get(i,0);
-                                    //     Mat rvec_mat = new Mat(3,1, CvType.CV_32F);
-                                    //     row = 0;col = 0;
-                                    //     rvec_mat.put(row,col,rvec);
-                                    //     Mat tvec_mat = new Mat(3,1, CvType.CV_32F);
-                                    //     row = 0;col = 0;
-                                    //     tvec_mat.put(row,col,tvec);
-                                    //     drawFrameAxes(displayCopy, cameraMatrix, distort, rvec_mat, tvec_mat, 0.1f);
-                                    // }
-                                    // if(corners.size() >= 1){
-                                    //     Log.e("corners size: ", Double.toString(corners.size()));
-                                    //     for(int i=0;i<corners.size();i++){
-                                    //         Log.e("xzcczx", Double.toString(ids.get(i,0)[0]) + ": " + corners.get(i).dump());
-                                    //         int xd = (int)corners.get(0).get(0,2)
-                                    //         // Log.e("xzcczx", corners.get(i).dump());
-                                    //     }
-                                    // }
+                                // wypisuje informacje na znaczniku
+                                // utils.DrawMarkersInfo(displayCopy, true, false, false, false);
 
-                                // printuje linie pomiędzy 4 cornerami jak je znajdzie
-                                // if(corners.size() == 4) {
-                                //     int x1 = (int)corners.get(0).get(0,2)[0];
-                                //     int y1 = (int)corners.get(0).get(0,2)[1];
-//
-                                //     int x2 = (int)corners.get(1).get(0,2)[0];
-                                //     int y2 = (int)corners.get(1).get(0,2)[1];
-//
-                                //     int x3 = (int)corners.get(2).get(0,2)[0];
-                                //     int y3 = (int)corners.get(2).get(0,2)[1];
-//
-                                //     int x4 = (int)corners.get(3).get(0,2)[0];
-                                //     int y4 = (int)corners.get(3).get(0,2)[1];
-//
-                                //     Point point1 = new Point(x1, y1);
-                                //     Point point2 = new Point(x2, y2);
-                                //     Point point3 = new Point(x3, y3);
-                                //     Point point4 = new Point(x4, y4);
-                                //     Imgproc.line(displayCopy, point1, point2, new Scalar(64, 64, 64), 10);
-                                //     Imgproc.line(displayCopy, point2, point3, new Scalar(64, 64, 64), 10);
-                                //     Imgproc.line(displayCopy, point3, point4, new Scalar(64, 64, 64), 10);
-                                //     Imgproc.line(displayCopy, point4, point1, new Scalar(64, 64, 64), 10);
-                                //     Log.e("time milliseconds", "narysowano");
-                                // }
+                                // wypisuje informacje na konsoli
+                                // utils.PrintMarkersInfo(false, false, false, true);
+
+                                // rysuje kółko jak znajdzie przekątną
+                                utils.DrawMiddleCircle(displayCopy);
                             }
 
                         }

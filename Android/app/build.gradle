@@ -1,8 +1,8 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 28
-    buildToolsVersion "29.0.0"
+    compileSdkVersion 30
+    buildToolsVersion '30.0.2'
     defaultConfig {
         applicationId "com.journaldev.androidcameraxopencv"
         minSdkVersion 21
@@ -16,6 +16,12 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+    }
+    compileOptions {
+        coreLibraryDesugaringEnabled true
+
+        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_1_8
     }
 }
 
@@ -33,4 +39,6 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.1'
 }
