@@ -12,7 +12,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class Markers {
-    List<Marker> markers;
+    private final List<Marker> markers;
+    int idLeftDown = 8, idRightDown = 10, idLeftUp = 0, idRightUp = 2;
 
     public Markers(List<Mat> mats, Mat ids){
         markers = new ArrayList<>();
@@ -44,5 +45,42 @@ public class Markers {
         if (!minDiagonalMarker.isPresent() || !maxDiagonalMarker.isPresent())
             return Double.MAX_VALUE;
         return maxDiagonalMarker.get().getDiagonalLength() - minDiagonalMarker.get().getDiagonalLength();
+    }
+
+    // return the biggest difference between marker's height and width
+    public double getMaxSideDiff(){
+        Optional<Marker> maxSideDiffMarker = markers.stream().max(Comparator.comparing(Marker::getSideDiff));
+        return maxSideDiffMarker.map(Marker::getSideDiff).orElse(Double.MAX_VALUE);
+    }
+
+    public double getSideDiagonalLengthDiff(){
+        return Math.abs(getDiagonalLengthDiff(idLeftDown, idRightDown));
+    }
+
+    public double getFlankDiagonalLengthDiff(){
+        if (markers.size() == 2 || markers.size() == 4)
+            return getDiagonalLengthDiff(idLeftDown, idLeftUp);
+        return 0;
+    }
+
+    private double getDiagonalLengthDiff(int id1, int id2){
+        double side1 = 0, side2 = 0;
+        for (int i=0;i<markers.size();i++){
+            if (markers.get(i).id == id1 || markers.get(i).id == id2){
+                if (side1 > 0)
+                    side1 = (side1 + markers.get(i).getDiagonalLength())/2;
+                else
+                    side1 += markers.get(i).getDiagonalLength();
+            }
+            else {
+                if (side2 > 0)
+                    side2 = (side2 + markers.get(i).getDiagonalLength())/2;
+                else
+                    side2 += markers.get(i).getDiagonalLength();
+            }
+        }
+        if (side1 == 0 || side2 == 0)
+            return 0;
+        return side1-side2;
     }
 }
