@@ -2,12 +2,15 @@ import cv2
 import os
 import pandas as pd
 
-counter_to_key_mapper = ("LeftTop", "RightTop", "RightLow", "LeftLow")
-dict_for_csv = {"photoFullPath": [], "LeftTop": [], "RightTop": [], "RightLow": [], "LeftLow": []}
+counter_to_key_mapper = ("Marker1", "Marker2", "Marker3", "Marker4", "ColorLeft", "ColorRight",
+                         "GreyScaleLeft", "GrayScaleRight", "CircleTop", "CircleRight", "CircleBottom", "CircleLeft")
+dict_for_csv = {"photoFullPath": [], "Marker1": [], "Marker2": [], "Marker3": [], "Marker4": [],
+                "ColorLeft": [], "ColorRight": [], "GreyScaleLeft": [], "GrayScaleRight": [],
+                "CircleTop": [], "CircleRight": [], "CircleBottom": [], "CircleLeft": []}
 
 
 def get_image_name():
-    directory = "./source"
+    directory = "./source_to_label"
     directory_files = os.listdir(directory)
     if "desktop.ini" in directory_files:
         directory_files.remove("desktop.ini")
@@ -22,14 +25,14 @@ def click_event(event, x, y, flags, params):
 
     if event == cv2.EVENT_LBUTTONDOWN:
         print(x/width, ' ', y/height)
-        dict_for_csv[counter_to_key_mapper[params["counter"] % 4]].append("({}, {})".format(x/width, (height - y)/height))
+        dict_for_csv[counter_to_key_mapper[params["counter"] % 12]].append("({}, {})".format(x/width, y/height))
         params["counter"] += 1
-        if params["counter"] % 4 == 0:
+        if params["counter"] % 12 == 0:
             try:
                 img_name = next(image_names_generator)
                 print(img_name)
             except StopIteration:
-                pd.DataFrame.from_dict(dict_for_csv).to_csv("./data.csv", sep="|")
+                pd.DataFrame.from_dict(dict_for_csv).to_csv("./labeled_data.csv", sep="|")
                 cv2.destroyAllWindows()
                 return
 
