@@ -52,6 +52,7 @@ import org.opencv.aruco.Dictionary;
 import org.opencv.core.Mat;
 
 import java.io.File;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -80,6 +81,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Preview preview;
 
     FloatingActionButton btnCapture, btnOk, btnCancel;
+
+    private final List<AngleHelper.Information> lastMessages = new ArrayList<>();
 
     static {
         if (!OpenCVLoader.initDebug())
@@ -225,6 +228,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         DetectorParameters parameters = DetectorParameters.create();
                         corners.clear();
 
+                        AngleHelper.Information information = null;
                         //detecting
                         if (!mat.empty()) {
                             long startTime = System.currentTimeMillis();
@@ -237,9 +241,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 Markers markers = new Markers(corners, ids);
 
                                 // klasa obsługująca wyświetlany tekst pomocny np. "lewo", "prawo"
-                                AngleHelper angleHelper = new AngleHelper(markers);
+                                AngleHelper angleHelper = new AngleHelper(markers, lastMessages);
                                 // wypisuje na środku zdjęcia "PERFECT" jak jest dobre ujęcie
-                                angleHelper.DrawAngleHelper(displayCopy);
+                                information = angleHelper.GetAngleHelper(true);
 
                                 // klasa pomocna do printowania rozmiarow itp
                                 DebugUtils utils = new DebugUtils(markers);
@@ -251,9 +255,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 // utils.PrintMarkersInfo(false, false, false, true);
 
                                 // rysuje kółko jak znajdzie przekątną
-                                utils.DrawMiddleCircle(displayCopy);
+                                // utils.DrawMiddleCircle(displayCopy);
                             }
-
+                        }
+                        if (lastMessages.size() > 0) {
+                            if (information == null)
+                                information = lastMessages.get(lastMessages.size() - 1);
+                            AngleHelper.DrawInformation(displayCopy, information);
                         }
                         Utils.matToBitmap(displayCopy, bitmap);
                         runOnUiThread(new Runnable() {

@@ -28,4 +28,7 @@ public class Marker {
     public double getDiagonalLength(){
         return Math.sqrt(Math.pow(this.ver0.x - this.ver2.x, 2) + Math.pow(this.ver0.x - this.ver2.x, 2));
     }
+    public double getSideDiff(){
+        return Math.abs(getWidth() - getHeight());
+    }
 }
