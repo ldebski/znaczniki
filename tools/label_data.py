@@ -3,9 +3,9 @@ import os
 import pandas as pd
 
 counter_to_key_mapper = ("Marker1", "Marker2", "Marker3", "Marker4", "ColorLeft", "ColorRight",
-                         "GreyScaleLeft", "GrayScaleRight", "CircleTop", "CircleRight", "CircleBottom", "CircleLeft")
+                         "GrayScaleRight", "GreyScaleLeft", "CircleTop", "CircleRight", "CircleBottom", "CircleLeft")
 dict_for_csv = {"photoFullPath": [], "Marker1": [], "Marker2": [], "Marker3": [], "Marker4": [],
-                "ColorLeft": [], "ColorRight": [], "GreyScaleLeft": [], "GrayScaleRight": [],
+                "ColorLeft": [], "ColorRight": [], "GrayScaleRight": [], "GreyScaleLeft": [],
                 "CircleTop": [], "CircleRight": [], "CircleBottom": [], "CircleLeft": []}
 
 

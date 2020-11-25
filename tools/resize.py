@@ -10,6 +10,6 @@ for screenshots_counter in range(1):
     for photo in directory_files:
         if os.path.isfile("." + screenshots_dir + "/" + photo):
             im = Image.open("." + screenshots_dir + "/" + photo)
-            img = im.resize((200, 300), Image.ANTIALIAS)
+            img = im.resize((400, 600), Image.ANTIALIAS)
             Path("./resized" + screenshots_dir).mkdir(parents=True, exist_ok=True)
             img.save("./resized" + screenshots_dir + "/" + photo)

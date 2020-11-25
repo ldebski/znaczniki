@@ -1,0 +1,9 @@
+W folderze tools:
+
+1. Tworzymy folder "to_resize" i wrzucamy do niego zdjęcia
+2. Tworzymy folder "resized"
+3. Uruchamiamy skrypt w konsoli - komenda py (jak nie działa to python lub python3) resize.py
+4. Tworzymy folder "source_to_label" i wrzucamy do niego zdjęcia z folderu resized/to_resize
+5. Uruchamiamy skrypt label_data.py komendą py label_data.py
+6. Ze względu na to, że w razie błędu trzeba zaczynać od nowa, dobrym pomysłem byłoby podzielenie zdjęć na kilka podgrup
+7. Po każdej podgrupie nalezy przekopiować cały folder ze zdjęciami (wraz z folderem czyli kopiujemy source_to_label, a nie konkretne zdjęcia do nowego unikatowego folderu np. data0 wraz z wygenerowanym plikiem csv labeled_data.csv
