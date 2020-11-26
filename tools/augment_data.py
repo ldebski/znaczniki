@@ -36,9 +36,8 @@ for i in range(len(os.listdir("./dataset"))):
                 im = im.rotate(-90, expand=True)
             im = im.resize((image_width, image_height), Image.ANTIALIAS)
             append_to_dict(im, row)
-            append_to_dict(ImageOps.expand(im.resize((image_width - 34, image_height - 34), Image.ANTIALIAS), 17, (255, 255, 255)), row)
-            append_to_dict(ImageOps.expand(im.resize((image_width - 24, image_height - 24), Image.ANTIALIAS), 12), row)
             append_to_dict(ImageOps.posterize(im, 6), row)
+            append_to_dict(ImageOps.expand(ImageOps.crop(im, 10), 10, (255, 255, 255)), row)
             append_to_dict(ImageOps.expand(ImageOps.crop(im, 10), 10), row)
             append_to_dict(ImageOps.autocontrast(im), row)
             if ext != "png":
