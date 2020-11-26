@@ -1,5 +1,5 @@
 import os
-from PIL import Image, ImageDraw
+from PIL import Image
 from pathlib import Path
 
 for screenshots_counter in range(1):
