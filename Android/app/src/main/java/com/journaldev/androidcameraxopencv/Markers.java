@@ -30,7 +30,7 @@ public class Markers {
         return markers.get(i);
     }
 
-    public double getCircleRadiusEstimate(){
+    public double getCircleRadiusEstimate() {
         double sum = 0;
         for (int i=0;i<markers.size();i++)
             sum += (markers.get(i).getHeight() + markers.get(i).getWidth())/2;

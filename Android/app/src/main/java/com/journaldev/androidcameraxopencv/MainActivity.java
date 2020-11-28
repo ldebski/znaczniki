@@ -15,6 +15,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.content.pm.PackageManager;
+import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.os.Bundle;
@@ -37,22 +38,14 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
-import org.opencv.aruco.Board;
 import org.opencv.aruco.CharucoBoard;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.android.OpenCVLoader;
-import org.opencv.android.Utils;
-import org.opencv.aruco.Aruco;
 import org.opencv.aruco.DetectorParameters;
 import org.opencv.aruco.Dictionary;
-import org.opencv.core.Mat;
 
 import java.io.File;
-import java.lang.reflect.Array;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -74,11 +67,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     ImageView ivBitmap;
     LinearLayout llBottom;
 
-    int currentImageType = Imgproc.COLOR_RGB2GRAY;
+    AlgType currentAlg = AlgType.DET;
 
     ImageCapture imageCapture;
     ImageAnalysis imageAnalysis;
     Preview preview;
+    MarkerDetectorSeg markerDetectorSeg;
+    MarkerDetectorPoints markerDetectorPoints;
+    AssetFileDescriptor fileDescriptorSeg;
+    AssetFileDescriptor fileDescriptorPoints;
 
     FloatingActionButton btnCapture, btnOk, btnCancel;
 
@@ -97,6 +94,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        try {
+            this.fileDescriptorSeg = this.getAssets().openFd("model.tflite");
+            this.fileDescriptorPoints = this.getAssets().openFd("detector.tflite");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        this.markerDetectorSeg = new MarkerDetectorSeg(fileDescriptorSeg);
+        this.markerDetectorPoints = new MarkerDetectorPoints(fileDescriptorPoints);
 
         btnCapture = findViewById(R.id.btnCapture);
         btnOk = findViewById(R.id.btnAccept);
@@ -210,64 +215,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void analyze(ImageProxy image, int rotationDegrees) {
                         //Analyzing live camera feed begins.
 
-                        final Bitmap bitmap = textureView.getBitmap();
-
+                        Bitmap bitmap = textureView.getBitmap();
+                        Mat mat = new Mat();
+                        Utils.bitmapToMat(bitmap, mat);
 
                         if (bitmap == null)
                             return;
-
-                        Mat mat = new Mat();
-                        Mat displayCopy = new Mat();
-                        Utils.bitmapToMat(bitmap, mat);
-                        Utils.bitmapToMat(bitmap, displayCopy);
-                        cvtColor(mat, mat, Imgproc.COLOR_BGRA2GRAY);
-
-                        Dictionary dictionary = getPredefinedDictionary(DICT_4X4_250);
-                        List<Mat> corners = new LinkedList<>();
-                        Mat ids = new Mat();
-                        DetectorParameters parameters = DetectorParameters.create();
-                        corners.clear();
-
-                        AngleHelper.Information information = null;
-                        //detecting
-                        if (!mat.empty()) {
-                            long startTime = System.currentTimeMillis();
-                            detectMarkers(mat, dictionary, corners, ids, parameters);
-                            long estimatedTime = System.currentTimeMillis() - startTime;
-                            //Log.e("time milliseconds", estimatedTime + "");
-                            if (!ids.empty()) {
-
-                                // klasa przechowująca wszystkie markery
-                                Markers markers = new Markers(corners, ids);
-
-                                // klasa obsługująca wyświetlany tekst pomocny np. "lewo", "prawo"
-                                AngleHelper angleHelper = new AngleHelper(markers, lastMessages);
-                                // wypisuje na środku zdjęcia "PERFECT" jak jest dobre ujęcie
-                                information = angleHelper.GetAngleHelper(true);
-
-                                // klasa pomocna do printowania rozmiarow itp
-                                DebugUtils utils = new DebugUtils(markers);
-
-                                // wypisuje informacje na znaczniku
-                                // utils.DrawMarkersInfo(displayCopy, true, false, false, false);
-
-                                // wypisuje informacje na konsoli
-                                // utils.PrintMarkersInfo(false, false, false, true);
-
-                                // rysuje kółko jak znajdzie przekątną
-                                // utils.DrawMiddleCircle(displayCopy);
-                            }
+                        Bitmap displaybitmap;
+                        switch (currentAlg) {
+                            case SEG:
+                                displaybitmap = markerDetectorSeg.runNetwork(bitmap);
+                                break;
+                            case DET:
+                                displaybitmap = markerDetectorPoints.runNetwork(bitmap);
+                                break;
+                            default: // ARUCO
+                                displaybitmap = arucoDetection(bitmap);
+                                break;
                         }
-                        if (lastMessages.size() > 0) {
-                            if (information == null)
-                                information = lastMessages.get(lastMessages.size() - 1);
-                            AngleHelper.DrawInformation(displayCopy, information);
-                        }
-                        Utils.matToBitmap(displayCopy, bitmap);
+
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                ivBitmap.setImageBitmap(bitmap);
+                                ivBitmap.setImageBitmap(displaybitmap);
                             }
                         });
 
@@ -277,6 +247,62 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         return imageAnalysis;
 
+    }
+
+    private Bitmap networkDetection(Bitmap bitmap){
+        return markerDetectorSeg.runNetwork(bitmap);
+    }
+
+    private Bitmap arucoDetection(Bitmap bitmap){
+        Mat mat = new Mat();
+        Mat displayCopy = new Mat();
+        Utils.bitmapToMat(bitmap, mat);
+        Utils.bitmapToMat(bitmap, displayCopy);
+        cvtColor(mat, mat, Imgproc.COLOR_BGRA2GRAY);
+
+        Dictionary dictionary = getPredefinedDictionary(DICT_4X4_250);
+        List<Mat> corners = new LinkedList<>();
+        Mat ids = new Mat();
+        DetectorParameters parameters = DetectorParameters.create();
+        corners.clear();
+
+        AngleHelper.Information information = null;
+        //detecting
+        if (!mat.empty()) {
+            long startTime = System.currentTimeMillis();
+            detectMarkers(mat, dictionary, corners, ids, parameters);
+            long estimatedTime = System.currentTimeMillis() - startTime;
+            if (!ids.empty()) {
+
+                // klasa przechowująca wszystkie markery
+                Markers markers = new Markers(corners, ids);
+
+                // klasa obsługująca wyświetlany tekst pomocny np. "lewo", "prawo"
+                AngleHelper angleHelper = new AngleHelper(markers, lastMessages, displayCopy);
+                // wypisuje na środku zdjęcia "PERFECT" jak jest dobre ujęcie
+                information = angleHelper.GetAngleHelper(false);
+
+                // klasa pomocna do printowania rozmiarow itp
+                DebugUtils utils = new DebugUtils(markers);
+
+                // wypisuje informacje na znaczniku
+                // utils.DrawMarkersInfo(displayCopy, true, false, false, false);
+
+                // wypisuje informacje na konsoli
+                // utils.PrintMarkersInfo(false, false, false, true);
+
+                // rysuje kółko jak znajdzie przekątną
+                // utils.DrawMiddleCircle(displayCopy);
+            }
+        }
+        if (lastMessages.size() > 0) {
+            if (information == null)
+                information = lastMessages.get(lastMessages.size() - 1);
+            AngleHelper.DrawInformation(displayCopy, information);
+        }
+
+        Utils.matToBitmap(displayCopy, bitmap);
+        return bitmap;
     }
 
     private void showAcceptedRejectedButton(boolean acceptedRejected) {
@@ -365,18 +391,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public boolean onOptionsItemSelected(MenuItem item) {
 
         switch (item.getItemId()) {
-            case R.id.black_white:
-                currentImageType = Imgproc.COLOR_RGB2GRAY;
+            case R.id.aruco:
+                currentAlg = AlgType.ARUCO;
                 startCamera();
                 return true;
 
-            case R.id.hsv:
-                currentImageType = Imgproc.COLOR_RGB2HSV;
+            case R.id.seg:
+                currentAlg = AlgType.SEG;
                 startCamera();
                 return true;
 
-            case R.id.lab:
-                currentImageType = Imgproc.COLOR_RGB2Lab;
+            case R.id.det:
+                currentAlg = AlgType.SEG;
                 startCamera();
                 return true;
         }

@@ -6,17 +6,17 @@
     tools:context=".MainActivity">
 
     <item
-        android:id="@+id/black_white"
-        android:title="Znaczniki natualne"
+        android:id="@+id/aruco"
+        android:title="Aruco"
         app:showAsAction="never" />
 
     <item
-        android:id="@+id/hsv"
-        android:title="Znaczniki sztuczne - ARuCo"
+        android:id="@+id/seg"
+        android:title="CNN Segmentacja"
         app:showAsAction="never" />
 
     <item
-        android:id="@+id/lab"
-        android:title="Znaczniki sztuczne - Sieć neuronowa"
+        android:id="@+id/det"
+        android:title="CNN detekcja"
         app:showAsAction="never" />
 </menu>

@@ -13,13 +13,21 @@ import java.util.Map;
 
 public class AngleHelper {
     Markers markers;
-    double diagonalAcceptThreshold = 70;
-    double sideAcceptThreshold = 20;
+    double diagonalAcceptThreshold;
+    double sideAcceptThreshold;
+    double sidesDiffThreshold;
+    double flanksDiffThreshold;
+
     List<Information> lastMessages;
 
-    public AngleHelper(Markers markers, List<Information> lastMessages){
+    public AngleHelper(Markers markers, List<Information> lastMessages, Mat display){
         this.markers = markers;
         this.lastMessages = lastMessages;
+        float displaySize = (float)display.width() * (float)display.height() / 10000;
+        this.diagonalAcceptThreshold = displaySize * 0.35;
+        this.sideAcceptThreshold = displaySize * 0.1;
+        this.sidesDiffThreshold = displaySize * 0.2;
+        this.flanksDiffThreshold = displaySize * 0.35;
     }
 
     public Information GetAngleHelper(boolean logs){
@@ -52,11 +60,8 @@ public class AngleHelper {
     }
 
     public Information GetHelp(){
-        int sidesDiffThreshold = 40;
-        int flanksDiffThreshold = 70;
         double sidesDiff = markers.getSideDiagonalLengthDiff();
         double flanksDiff = markers.getFlankDiagonalLengthDiff();
-        // Log.e("flanksDiff: ", Double.toString(markers.getFlankDiagonalLengthDiff()));
 
         if (sidesDiff == 0 && flanksDiff == 0)
             return Information.NONE;
@@ -80,6 +85,7 @@ public class AngleHelper {
         if (information == AngleHelper.Information.NONE)
             return;
 
+        // Log.e("display", Float.toString((float)display.width()/2) + ", " + Float.toString((float)display.height()/2) );
         Point displayCenter = new Point((float)display.width()/2, (float)display.height()/2);
         Imgproc.putText(display, information.toString(), displayCenter,
                 1, 3, new Scalar(130, 0, 0), 4);
