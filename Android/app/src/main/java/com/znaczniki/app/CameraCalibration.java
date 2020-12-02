@@ -1,8 +1,8 @@
-package com.journaldev.androidcameraxopencv;
+package com.znaczniki.app;
 
 public class CameraCalibration {
 
-    public void calibration(){
+    public void calibration() {
         // próba kalibracji kamery trochę nieudana
         // //Aruco.drawDetectedMarkers(mat, corners, ids);
         // Mat cameraMatrix = new Mat(3, 3, CvType.CV_32F);

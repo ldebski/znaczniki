@@ -1,18 +1,4 @@
-package com.journaldev.androidcameraxopencv;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.camera.core.CameraX;
-import androidx.camera.core.ImageAnalysis;
-import androidx.camera.core.ImageAnalysisConfig;
-import androidx.camera.core.ImageCapture;
-import androidx.camera.core.ImageCaptureConfig;
-import androidx.camera.core.ImageProxy;
-import androidx.camera.core.Preview;
-import androidx.camera.core.PreviewConfig;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+package com.znaczniki.app;
 
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
@@ -34,15 +20,30 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.core.CameraX;
+import androidx.camera.core.ImageAnalysis;
+import androidx.camera.core.ImageAnalysisConfig;
+import androidx.camera.core.ImageCapture;
+import androidx.camera.core.ImageCaptureConfig;
+import androidx.camera.core.ImageProxy;
+import androidx.camera.core.Preview;
+import androidx.camera.core.PreviewConfig;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.znaczniki.androidcameraxopencv.R;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.aruco.CharucoBoard;
-import org.opencv.core.Mat;
-import org.opencv.imgproc.Imgproc;
 import org.opencv.aruco.DetectorParameters;
 import org.opencv.aruco.Dictionary;
+import org.opencv.core.Mat;
+import org.opencv.imgproc.Imgproc;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,34 +53,12 @@ import java.util.List;
 
 import static org.opencv.aruco.Aruco.DICT_4X4_250;
 import static org.opencv.aruco.Aruco.detectMarkers;
-import static org.opencv.aruco.Aruco.estimatePoseBoard;
 import static org.opencv.aruco.Aruco.getPredefinedDictionary;
-import static org.opencv.calib3d.Calib3d.drawFrameAxes;
 import static org.opencv.imgcodecs.Imgcodecs.imwrite;
 import static org.opencv.imgproc.Imgproc.cvtColor;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-
-    private int REQUEST_CODE_PERMISSIONS = 101;
-    private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA", "android.permission.WRITE_EXTERNAL_STORAGE"};
-    TextureView textureView;
-    ImageView ivBitmap;
-    LinearLayout llBottom;
-
-    AlgType currentAlg = AlgType.DET;
-
-    ImageCapture imageCapture;
-    ImageAnalysis imageAnalysis;
-    Preview preview;
-    MarkerDetectorSeg markerDetectorSeg;
-    MarkerDetectorPoints markerDetectorPoints;
-    AssetFileDescriptor fileDescriptorSeg;
-    AssetFileDescriptor fileDescriptorPoints;
-
-    FloatingActionButton btnCapture, btnOk, btnCancel;
-
-    private final List<AngleHelper.Information> lastMessages = new ArrayList<>();
 
     static {
         if (!OpenCVLoader.initDebug())
@@ -88,6 +67,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Log.d("SUCCESS", "OpenCV loaded");
     }
 
+    private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA", "android.permission.WRITE_EXTERNAL_STORAGE"};
+    private final List<AngleHelper.Information> lastMessages = new ArrayList<>();
+    TextureView textureView;
+    ImageView ivBitmap;
+    LinearLayout llBottom;
+    AlgType currentAlg = AlgType.SEG;
+    ImageCapture imageCapture;
+    ImageAnalysis imageAnalysis;
+    Preview preview;
+    MarkerDetectorSeg markerDetectorSeg;
+    MarkerDetectorPoints markerDetectorPoints;
+    AssetFileDescriptor fileDescriptorSeg;
+    AssetFileDescriptor fileDescriptorPoints;
+    FloatingActionButton btnCapture, btnOk, btnCancel;
+    private final int REQUEST_CODE_PERMISSIONS = 101;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,8 +89,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         try {
-            this.fileDescriptorSeg = this.getAssets().openFd("model.tflite");
-            this.fileDescriptorPoints = this.getAssets().openFd("detector.tflite");
+            this.fileDescriptorSeg = this.getAssets().openFd("segmentationModel.tflite");
+            this.fileDescriptorPoints = this.getAssets().openFd("pointModel.tflite");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -147,16 +141,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Preview preview = new Preview(pConfig);
 
         preview.setOnPreviewOutputUpdateListener(
-                new Preview.OnPreviewOutputUpdateListener() {
-                    @Override
-                    public void onUpdated(Preview.PreviewOutput output) {
-                        ViewGroup parent = (ViewGroup) textureView.getParent();
-                        parent.removeView(textureView);
-                        parent.addView(textureView, 0);
+                output -> {
+                    ViewGroup parent = (ViewGroup) textureView.getParent();
+                    parent.removeView(textureView);
+                    parent.addView(textureView, 0);
 
-                        textureView.setSurfaceTexture(output.getSurfaceTexture());
-                        updateTransform();
-                    }
+                    textureView.setSurfaceTexture(output.getSurfaceTexture());
+                    updateTransform();
                 });
 
         return preview;
@@ -210,38 +201,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ImageAnalysis imageAnalysis = new ImageAnalysis(imageAnalysisConfig);
 
         imageAnalysis.setAnalyzer(
-                new ImageAnalysis.Analyzer() {
-                    @Override
-                    public void analyze(ImageProxy image, int rotationDegrees) {
-                        //Analyzing live camera feed begins.
+                (image, rotationDegrees) -> {
+                    //Analyzing live camera feed begins.
 
-                        Bitmap bitmap = textureView.getBitmap();
-                        Mat mat = new Mat();
-                        Utils.bitmapToMat(bitmap, mat);
+                    Bitmap bitmap = textureView.getBitmap();
+                    Mat mat = new Mat();
+                    Utils.bitmapToMat(bitmap, mat);
 
-                        if (bitmap == null)
-                            return;
-                        Bitmap displaybitmap;
-                        switch (currentAlg) {
-                            case SEG:
-                                displaybitmap = markerDetectorSeg.runNetwork(bitmap);
-                                break;
-                            case DET:
-                                displaybitmap = markerDetectorPoints.runNetwork(bitmap);
-                                break;
-                            default: // ARUCO
-                                displaybitmap = arucoDetection(bitmap);
-                                break;
-                        }
-
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                ivBitmap.setImageBitmap(displaybitmap);
-                            }
-                        });
-
+                    if (bitmap == null)
+                        return;
+                    Bitmap displaybitmap;
+                    switch (currentAlg) {
+                        case SEG:
+                            displaybitmap = markerDetectorSeg.runNetwork(bitmap);
+                            break;
+                        case DET:
+                            displaybitmap = markerDetectorPoints.runNetwork(bitmap);
+                            break;
+                        default: // ARUCO
+                            displaybitmap = arucoDetection(bitmap);
+                            break;
                     }
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            ivBitmap.setImageBitmap(displaybitmap);
+                        }
+                    });
+
                 });
 
 
@@ -249,11 +237,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    private Bitmap networkDetection(Bitmap bitmap){
-        return markerDetectorSeg.runNetwork(bitmap);
-    }
-
-    private Bitmap arucoDetection(Bitmap bitmap){
+    private Bitmap arucoDetection(Bitmap bitmap) {
         Mat mat = new Mat();
         Mat displayCopy = new Mat();
         Utils.bitmapToMat(bitmap, mat);
@@ -270,7 +254,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //detecting
         if (!mat.empty()) {
             long startTime = System.currentTimeMillis();
+
             detectMarkers(mat, dictionary, corners, ids, parameters);
+
             long estimatedTime = System.currentTimeMillis() - startTime;
             if (!ids.empty()) {
 
@@ -280,16 +266,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 // klasa obsługująca wyświetlany tekst pomocny np. "lewo", "prawo"
                 AngleHelper angleHelper = new AngleHelper(markers, lastMessages, displayCopy);
                 // wypisuje na środku zdjęcia "PERFECT" jak jest dobre ujęcie
-                information = angleHelper.GetAngleHelper(false);
+                information = angleHelper.GetAngleHelper();
 
                 // klasa pomocna do printowania rozmiarow itp
                 DebugUtils utils = new DebugUtils(markers);
 
                 // wypisuje informacje na znaczniku
-                // utils.DrawMarkersInfo(displayCopy, true, false, false, false);
-
+                utils.DrawMarkersInfo(displayCopy, false, true, true, false);
+                utils.DrawMarkersBox(displayCopy);
                 // wypisuje informacje na konsoli
-                // utils.PrintMarkersInfo(false, false, false, true);
+                utils.PrintMarkersInfo(true, true, true, true);
 
                 // rysuje kółko jak znajdzie przekątną
                 // utils.DrawMiddleCircle(displayCopy);
@@ -393,17 +379,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (item.getItemId()) {
             case R.id.aruco:
                 currentAlg = AlgType.ARUCO;
-                startCamera();
+                //startCamera();
                 return true;
 
             case R.id.seg:
                 currentAlg = AlgType.SEG;
-                startCamera();
+                //startCamera();
                 return true;
 
             case R.id.det:
-                currentAlg = AlgType.SEG;
-                startCamera();
+                currentAlg = AlgType.DET;
+                //startCamera();
                 return true;
         }
 
