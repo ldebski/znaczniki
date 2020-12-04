@@ -29,18 +29,6 @@ def generate_mask(im, row):
     d.line([(grey_scale_left_point[0] * image_width, grey_scale_left_point[1] * image_height),
             (grey_scale_right_point[0] * image_width, grey_scale_right_point[1] * image_height)], fill="blue", width=4)
 
-    # circle_top = eval(row["CircleTop"])
-    # circle_right = eval(row["CircleRight"])
-    # circle_bottom = eval(row["CircleBottom"])
-    # circle_left = eval(row["CircleLeft"])
-
-    # center_horizontal = ((circle_left[0] + circle_right[0]) / 2 * image_width,
-    #                      (circle_left[1] + circle_right[1]) / 2 * image_height)
-    # center_vertical = ((circle_top[0] + circle_bottom[0]) / 2 * image_width,
-    #                    (circle_top[1] + circle_bottom[1]) / 2 * image_height)
-
-    # d.ellipse(((circle_left[0] + circle_left[0]) * image_width, circle_top[1] * image_height,
-    #            circle_right[0] * image_width, circle_bottom[1] * image_height), fill='blue', outline='blue')
     mask.filter(ImageFilter.GaussianBlur(100))
     return mask
 

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<QCARInfo xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="QCAR_Dataset_config.xsd">
+  <TargetSet version="5.0" toolVersion="4.2.0">
+    <ObjectTarget bbox="0.0000 0.0000 0.0000 0.1425 0.0950 0.0950" captureAppVersion="6.5.0" lastSaved="2020-11-17T11:49:04Z" name="mms" targetId="fbacc3e5a0d44f05ba27dedbc8f5fac3" version="2.0" />
+    <ObjectTarget bbox="0.0000 0.0000 0.0000 0.1425 0.0950 0.0950" captureAppVersion="6.5.0" lastSaved="2020-11-17T11:54:46Z" name="letter_t" targetId="0acd7ad9468540619f5bdfdd2d756764" version="2.0" />
+    <ObjectTarget bbox="0.0000 0.0000 0.0000 0.1425 0.0950 0.0950" captureAppVersion="6.5.0" lastSaved="2020-11-16T13:10:53Z" name="czerwoneauto" targetId="da928db6409a4867b5fcf2e73b9805c7" version="2.0" />
+  </TargetSet>
+</QCARInfo>
